@@ -1,7 +1,7 @@
 三个页面代码
 
 index.jsp页面
-
+——————————————————
 <%@ page language="java" import="javax.naming.*" pageEncoding="GB2312"%>
 <%@ page import="javax.sql.*" %>
 <%@ page import="java.sql.*" %>
@@ -28,8 +28,10 @@ try {
 %>
 </body>
 </html>
-show_jstl.jsp页面代码
 
+
+show_jstl.jsp页面代码
+——————————————————————————
 <%@ page contentType="text/html;charset=utf-8"%>
 <%@ page import="java.util.*" %>
 <%@ page import="com.hbc.bean.StuBean" %>
@@ -65,8 +67,10 @@ show_jstl.jsp页面代码
 	
  
 </table>
-show.jsp代码
 
+
+show.jsp代码
+——————————————————————
 <%@ page contentType="text/html;charset=utf-8"%>
 <%@ page import="java.util.*" %>
 <%@ page import="com.hbc.bean.StuBean" %>
