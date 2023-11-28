@@ -1,0 +1,568 @@
+三个页面代码
+
+index.jsp页面
+
+<%@ page language="java" import="javax.naming.*" pageEncoding="GB2312"%>
+<%@ page import="javax.sql.*" %>
+<%@ page import="java.sql.*" %>
+<html>
+<body>
+<%
+try {
+  	Context ctx = new InitialContext();
+  	ctx = (Context) ctx.lookup("java:comp/env");
+  	DataSource ds = (DataSource) ctx.lookup("TestJNDI");	//获取连接池对象
+  	Connection conn=ds.getConnection();
+  	Statement stmt=conn.createStatement();
+  	String sql="SELECT * FROM tb_user";
+  	ResultSet rs=stmt.executeQuery(sql);
+    while(rs.next()){
+    	out.println("<br>用户名："+rs.getString(2)+"	密码："+rs.getString(3));
+    }
+  	rs.close();
+  	stmt.close();
+  	conn.close();
+} catch (NamingException e) {
+  	e.printStackTrace();
+}
+%>
+</body>
+</html>
+show_jstl.jsp页面代码
+
+<%@ page contentType="text/html;charset=utf-8"%>
+<%@ page import="java.util.*" %>
+<%@ page import="com.hbc.bean.StuBean" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+ 
+<%	ArrayList stuList=(ArrayList)request.getAttribute("stuList");	%>
+ 
+<table border="1" width="450" rules="none" cellspacing="0" cellpadding="0">
+	<tr height="50"><td colspan="6" align="center">学生信息如下</td></tr>
+	<tr align="center" height="30" bgcolor="lightgrey">
+		<td>编号</td>
+	    <td>姓名</td>
+		<td>性别</td>
+		<td>电话</td>
+		<td>操作1</td>
+		<td>操作2</td>
+		<td>操作3</td>
+		<td>操作4</td>
+	</tr>
+	
+	<c:forEach items="${stuList}"  var="stu">
+        <tr height="50" align="center">
+	        <td>${stu.stuId}</td>
+	        <td>${stu.stuName}</td>
+	        <td>${stu.stuSex}</td>
+	        <td>${stu.stuPhone}</td>
+	        <td><a href="addServlet?stuId=${stu.stuId}">增加</a></td>
+	        <td><a href="DeleteServlet?stuId=${stu.stuId}">删除</a></td>
+		    <td><a href="ToUpdateServlet?stuId=${stu.stuId}">修改</a></td>
+		    <td><a href="selectServlet?stuId=${stu.stuId}">查询</a></td>
+        </tr>
+    </c:forEach>
+	
+ 
+</table>
+show.jsp代码
+
+<%@ page contentType="text/html;charset=utf-8"%>
+<%@ page import="java.util.*" %>
+<%@ page import="com.hbc.bean.StuBean" %>
+ 
+<%	ArrayList stuList=(ArrayList)request.getAttribute("stuList");	%>
+ 
+<table border="1" width="450" rules="none" cellspacing="0" cellpadding="0">
+	<tr height="50"><td colspan="6" align="center">学生信息如下</td></tr>
+	<tr align="center" height="30" bgcolor="lightgrey">
+		<td>编号</td>
+	    <td>姓名</td>
+		<td>性别</td>
+		<td>电话</td>
+		<td>操作1</td>
+		<td>操作2</td>
+		<td>操作3</td>
+		<td>操作4</td>
+	</tr>
+	<%  if(stuList==null||stuList.size()==0){ %>
+	<tr height="100"><td colspan="6" align="center">没有信息可显示！</td></tr>
+	<% 
+		} 
+		else{
+			for(int i=0;i<stuList.size();i++){
+				StuBean stu = (StuBean)stuList.get(i);
+	%>
+	<tr height="50" align="center">
+		<td><%=stu.getStuId()%></td>
+		<td><%=stu.getStuName()%></td>
+		<td><%=stu.getStuSex()%></td>
+		<td><%=stu.getStuPhone()%></td>
+		<td><a href="addServlet?stuId=<%=stu.getStuId()%>">增加</a></td>
+		<td><a href="DeleteServlet?stuId=<%=stu.getStuId()%>">删除</a></td>
+		<td><a href="ToUpdateServlet?stuId=<%=stu.getStuId()%>">修改</a></td>
+		<td><a href="selectServlet?stuId=<%=stu.getStuId()%>">增加</a></td>
+		
+	</tr>
+	<%
+			}
+		}
+	%>
+</table>
+以下为包代码
+————————————————
+com.hbc.bean.DBUtil.java
+————————————————————————
+package com.hbc.bean;
+ 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+ 
+public class DBUtil {
+ 
+	static {
+		//MySQL 5.7及以下使用的代码
+		String driverClass="com.mysql.jdbc.Driver";
+		try {
+			Class.forName(driverClass);
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}	 // 加载数据库驱动
+	}
+	
+	public DBUtil() {
+		// TODO Auto-generated constructor stub
+	}
+	
+	
+	//获取数据库连接
+	public static Connection getConnection() {
+		String url="jdbc:mysql://localhost:3306/db_student";
+		String username = "root";
+		String password = "";
+		Connection conn = null;
+		try {
+			 conn = DriverManager.getConnection(url, username, password);
+		} catch (SQLException e) {
+            e.printStackTrace();
+		}
+		return conn;
+	}
+	
+	
+	//获取静态语句操作对象
+	public static Statement getStatement(Connection conn) {
+		Statement stat = null;
+		try {
+			stat = conn.createStatement();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return stat;
+	}
+	
+	//释放资源
+    public static void closeAll(Connection connection, Statement statement,ResultSet resultSet){
+        try {
+            if (resultSet!=null){
+                resultSet.close();
+            }
+            if (connection!=null){
+                connection.close();
+ 
+            }
+            if (statement!=null){
+                statement.close();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    
+	//释放资源  （方法重载）
+    public static void close(Connection connection, Statement statement){
+        try {
+            if (connection!=null){
+                connection.close();
+            }
+            if (statement!=null){
+                statement.close();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+ 
+ 
+}
+
+
+com.hbc.bean.StuBean.java
+————————————————————————
+
+
+package com.hbc.bean;
+ 
+public class StuBean {
+ 
+	public StuBean() {
+		// TODO Auto-generated constructor stub
+	}
+	
+	private int stuId;
+	private String stuName;
+	private String stuSex;
+	private String stuPhone;
+	public int getStuId() {
+		return stuId;
+	}
+	public void setStuId(int stuId) {
+		this.stuId = stuId;
+	}
+	public String getStuName() {
+		return stuName;
+	}
+	public void setStuName(String stuName) {
+		this.stuName = stuName;
+	}
+	public String getStuSex() {
+		return stuSex;
+	}
+	public void setStuSex(String stuSex) {
+		this.stuSex = stuSex;
+	}
+	public String getStuPhone() {
+		return stuPhone;
+	}
+	public void setStuPhone(String stuPhone) {
+		this.stuPhone = stuPhone;
+	}
+	
+	
+ 
+}
+
+
+com.hbc.dao.stuDao.java
+————————————————————————
+package com.hbc.dao;
+ 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
+ 
+import com.hbc.bean.DBUtil;
+import com.hbc.bean.StuBean;
+ 
+ 
+ 
+public class StuDAO {
+ 
+	public StuDAO() {
+		// TODO Auto-generated constructor stub
+	}
+	
+	public List queryAll() {
+		List list = new ArrayList();
+		Connection conn = DBUtil.getConnection();
+		Statement stat = DBUtil.getStatement(conn);	
+		ResultSet rs = null;
+		try {
+			rs = stat.executeQuery("select * from wlf");
+			StuBean stu = null;
+			while(rs.next()) {
+				stu = new StuBean();
+				stu.setStuId(rs.getInt(1)); 
+				stu.setStuName(rs.getString(2));
+				stu.setStuSex(rs.getString(3));
+				stu.setStuPhone(rs.getString(4));
+				list.add(stu);
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally {
+			DBUtil.closeAll(conn, stat, rs);
+		}
+		return list;
+	}
+	
+	//删除
+	public void deleteById(int stuId) {
+		List list = new ArrayList();
+		Connection conn = DBUtil.getConnection();
+		Statement stat = DBUtil.getStatement(conn);	
+		try {
+			int rn = stat.executeUpdate("delete from wlf where stuId="+stuId);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally {
+			DBUtil.close(conn, stat);
+		}
+	}
+	
+	//增加
+	public void addStu(StuBean stu) {
+		Connection conn = DBUtil.getConnection();
+		PreparedStatement stat = null;
+		String sql = "insert into wlf(stuId,stuName,stuSex,stuPhone) values(?,?,?,?)";
+		try {
+			stat = conn.prepareStatement(sql);
+			stat.setInt(1, stu.getStuId());
+			stat.setString(2, stu.getStuName());
+			stat.setString(3, stu.getStuSex());
+			stat.setString(4, stu.getStuPhone());
+			int rtn = stat.executeUpdate();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally {
+			try {
+				stat.close();
+				conn.close();
+			}catch(SQLException e) {
+			e.printStackTrace();	
+			}
+		//	DBUtil.close(conn, stat);
+		}
+		
+	}
+	
+	//修改
+	public StuBean selectById(int stuId) {
+		StuBean stu = new StuBean();
+		Connection conn = DBUtil.getConnection();
+		Statement stat = DBUtil.getStatement(conn);	
+		ResultSet rs = null;
+		try {
+			rs = stat.executeQuery("select * from wlf where stuId="+stuId);
+			while(rs.next()) {
+				stu.setStuId(rs.getInt(1)); 
+				stu.setStuName(rs.getString(2));
+				stu.setStuSex(rs.getString(3));
+				stu.setStuPhone(rs.getString(4));
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally {
+			DBUtil.closeAll(conn, stat,rs);
+		}
+		return stu;
+	}
+	
+	//查找
+	public void updateStu(StuBean stu) {
+		Connection conn = DBUtil.getConnection();
+		PreparedStatement stat = null;
+		String sql = "update wlf set stuName=?,stuSex=?,stuPhone=? where stuId=?";
+		try {
+			stat = conn.prepareStatement(sql);
+			stat.setString(1, stu.getStuName());
+			stat.setString(2, stu.getStuSex());
+			stat.setString(3, stu.getStuPhone());
+			stat.setInt(4, stu.getStuId());
+			int rtn = stat.executeUpdate();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally {
+			try {
+				stat.close();
+				conn.close();
+			}catch(SQLException e) {
+			e.printStackTrace();	
+			}
+			//DBUtil.close(conn, stat);
+		}
+	}
+ 
+}
+
+
+
+com.hbc.servlet.AddServlet.java
+————————————————————————————————————
+package com.hbc.servlet;
+ 
+import java.io.IOException;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+ 
+import com.hbc.bean.StuBean;
+import com.hbc.dao.StuDAO;
+ 
+/**
+ * Servlet implementation class AddServlet
+ */
+@WebServlet("/AddServlet")
+public class AddServlet extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+       
+    /**
+     * @see HttpServlet#HttpServlet()
+     */
+    public AddServlet() {
+        super();
+        // TODO Auto-generated constructor stub
+    }
+ 
+	/**
+	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
+	 */
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		// TODO Auto-generated method stub
+		response.getWriter().append("Served at: ").append(request.getContextPath());
+	}
+ 
+	/**
+	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
+	 */
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		// TODO Auto-generated method stub
+		doGet(request, response);
+		String StuId = request.getParameter("stuId");
+		String StuName = request.getParameter("stuName");
+		String StuSex = request.getParameter("stuSex");
+		String StuPhone = request.getParameter("stuPhone");
+		StuBean stu = new StuBean();
+		stu.setStuName(StuId);
+		stu.setStuName(StuName);
+		stu.setStuName(StuSex);
+		stu.setStuName(StuPhone);
+		StuDAO dao = new StuDAO();
+		dao.addStu(stu);
+		
+	}
+ 
+}
+
+
+
+
+com.hbc.servlet.DeleteServlet.java
+————————————————————————————————————————
+package com.hbc.servlet;
+ 
+import java.io.IOException;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+ 
+import com.hbc.dao.StuDAO;
+ 
+/**
+ * Servlet implementation class DeleteServlet
+ */
+@WebServlet("/DeleteServlet")
+public class DeleteServlet extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+       
+    /**
+     * @see HttpServlet#HttpServlet()
+     */
+    public DeleteServlet() {
+        super();
+        // TODO Auto-generated constructor stub
+    }
+ 
+	/**
+	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
+	 */
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		// TODO Auto-generated method stub
+		response.getWriter().append("Served at: ").append(request.getContextPath());
+	}
+ 
+	/**
+	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
+	 */
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		// TODO Auto-generated method stub
+		
+		String stuIds = request.getParameter("stuId");
+		int stuId = Integer.parseInt(stuIds);
+		StuDAO sdao = new StuDAO();
+		sdao.deleteById(stuId);
+		request.getRequestDispatcher("QueryAllServlet").forward(request, response);
+ 
+		
+	}
+ 
+}
+
+
+
+
+com.hbc.servlet.QueryAllServlet.java
+——————————————————————————————————————
+package com.hbc.servlet;
+ 
+import java.io.IOException;
+import java.util.List;
+ 
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+ 
+import com.hbc.dao.StuDAO;
+ 
+ 
+/**
+ * Servlet implementation class QueryAllServlet
+ */
+@WebServlet("/QueryAllServlet")
+public class QueryAllServlet extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+       
+    /**
+     * @see HttpServlet#HttpServlet()
+     */
+    public QueryAllServlet() {
+        super();
+        // TODO Auto-generated constructor stub
+    }
+ 
+	/**
+	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
+	 */
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		// TODO Auto-generated method stub
+		doPost(request,response);
+	}
+ 
+	/**
+	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
+	 */
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		// TODO Auto-generated method stub
+		//doGet(request, response);
+		StuDAO dao = new StuDAO();
+		List list = dao.queryAll();	
+		request.setAttribute("stuList", list);
+		request.getRequestDispatcher("show_jstl.jsp").forward(request, response);
+//		request.getRequestDispatcher("show.jsp").forward(request, response);
+		
+		
+	}
+ 
+}
+其中还需要引用bean的服务包和链接数据库的包，否则就会报错，目前只做出了QueryAllServlet，在进入show页面之后修改后路径为QueryAllServlet可以跳转到这个页面，数据库引入名和表名需要根据自己的数据库和表名进行修改。
+————————————————
